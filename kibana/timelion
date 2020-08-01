@@ -1,1 +1,18 @@
+Visualize
+
+Visualize enables you to create visualizations of the data from your Elasticsearch indices, Which you can then add to dashboards for analysis. Kibana visualizations are based on Elasticsearch queries. By using a series of Elasticsearch aggreagations to extract and process your data, you can create charts that show you the trends, spikes, and dips you need to  know about.
+
+To begin, open the menu, go to visualize, then click Create visualzation.
+
+Timelion
+Computes and combine data from multiple time series data sets.
+
+Timelion
+Timelion is a time series data visualizer that enables you to combine totally independent data sources within a single visualization. It's driven by a simple expression language you use to retrieve time series data, perform calculations to tease out the answers to complex questions, and visualize the results.
+
+For example, Timelion enables you to easily get the answers to questions like;
+ - What is the real-time percentage of CPU time spent in user space to the results offse by one hour?
+ - 
+ - 
+
 
