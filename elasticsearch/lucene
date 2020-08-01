@@ -138,8 +138,30 @@ GET /_search
  }
 }
 
+Since several queries are generated from the indivisual search terms, combining them is automatically done using a dis_max query with a tie_breaker. For example (the name is boosted by 5 using ^5 notation):
 
+GET /_search
+{
+ "query" : {
+  "query_string" : {
+   "fields" : ["content", "name^5"],
+   "query" : "this AND that OR thus",
+   "tie_breaker" : 0
+   }
+ }
+}
 
+Simple wildcard can also be used to search "within" specific inner elements of the document. For example, if we have a city object with several fields (or inner object with fields) in it, we can automatically search on all "city" fields:
+
+GET /_search
+{
+ "query" : {
+  "query_string" : {
+   "fields" : ["city.*"],
+   "query" : "this AND that OR thus"
+   }
+ }
+}
 
 
 
