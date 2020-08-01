@@ -1,0 +1,100 @@
+Kibana Guide [7.7] >> Discover >> Search data >> Lucene query syntax
+url: https://www.elastic.co/guide/en/kibana/7.7/lucene-query.html
+
+Lucene query syntax
+Kibana's legacy query language was based on the Lucene query syntax. For the time being this syntax is still avaiable under the options menu in the Query Bar and in Advanced Settings. The following are some tips that can help get you started.
+ - To perform a free text search, simply enter a text string. For example, if you're searching web server logs, you could enter safari to search all fields for the term safari.
+ - To search for a value in a specific field, prefix the value with the name of the field. For example, you could enter status:200 to find all of the entries that contain the value 200 in the status field.
+ - To search for a range of values, you can use the bracketed range syntax, [START_VALUE TO END_VALUE]. For example, to find entries that have 4xx status codes and have an extension of php or html, you could enter status:[400 TO 499] AND (extension:php OR extension:html).
+ 
+For more detailed information about the Lucene query syntax, see the Query String Query docs.
+
+Query sting query
+url: https://www.elastic.co/guide/en/elasticsearch/reference/7.7/query-dsl-query-string-query.html#query-string-syntax
+
+Returns documents based on a provided query sting, using a parser with a strict syntax.
+
+This query uses a syntax to parse and split the provided query string based on operators, such as AND or NOT. The query then analyzes each split text independently before returning matching documents.
+
+You can use the query_string query to create a complex search that includes wildcard characters, searches across multiple fields, and more. While versatile, the query is strict and returns an error if the query string includes any invalid syntax.
+
+Example request
+When running  the following search, the query_string query splits (new york city) or (big apple) into two parts: new york city and big apple. The content fields' analyzer then independently converts each part into tokens before returning matching documents. Because the query syntax does not use whitespace as an operator, new york city is passed as-is to the analyzer.
+
+GET /_search
+{
+  "query" : {
+    "query_string" : {
+      "query" : "(new york city) OR (big apple)",
+      "default_field" : "content"
+      }
+    }
+  }
+  
+Top-level parameters for query_string
+
+query
+(Required, string) Query string you wish to parse and use for search. See Query string syntas
+
+default_field
+(Optional, string) Default field you wish to search if no field is provided in the query stirng.
+
+default_operator
+(Optional, string) Default boolean logic used to interpret text in the query string if no operators are sepcified. Valid values are:
+ - OR (Default)
+ For example, q query string of capital of Hungary is interpreted as capital OR of OR Hungary.
+
+ - AND 
+ For example, a query string of capital of Hungary is interpreted as capital AND of AND Hungary.
+
+Ranges
+Ranges can be specified for date, numeric or string fields. Inclusive ranges are specified with square brackets [min TO max] and exclusive ranges with curly brackets {min TO max}.
+
+ - All days in 2012: 
+ date: [2012-01-01 TO 2012-12-31]
+ 
+ - Numbers 1..5
+ count: [1 TO 5]
+ 
+ - Tags between alpha and omega, excluding alpha and omega:
+ tag: {alpha TO omega}
+ 
+ - Numbers from 10 upwards
+ count: [10 TO *]
+ 
+ - Dates before 2012
+ date: {* TO 2012-01-01}
+ 
+Curly and square brackets can be combined:
+ - Numbers from 1 up to but not including 5
+ count: [1 TO 5}
+ 
+Ranges with one side unbounded can use the following syntax:
+ age: > 10
+ age: >= 10
+ age: < 10
+ age: <= 10
+ age: (>= 10 AND < 20)
+ age: (+>= 10 +< 20)
+
+Boolean operators
+By default, all terms are optional, as long as one term matches. A search for foo bar baz will find any document that contains one or more of foo or bar or baz. We have already 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
