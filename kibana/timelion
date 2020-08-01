@@ -7,12 +7,76 @@ To begin, open the menu, go to visualize, then click Create visualzation.
 Timelion
 Computes and combine data from multiple time series data sets.
 
+https://www.elastic.co/guide/en/kibana/7.7/timelion.html
+
 Timelion
 Timelion is a time series data visualizer that enables you to combine totally independent data sources within a single visualization. It's driven by a simple expression language you use to retrieve time series data, perform calculations to tease out the answers to complex questions, and visualize the results.
 
 For example, Timelion enables you to easily get the answers to questions like;
  - What is the real-time percentage of CPU time spent in user space to the results offse by one hour?
- - 
- - 
+ - What does my inbound and outbound network traffic look like? 
+ - How much memory is my system actually using?
+ 
+Before you begin
+In this tutorial, you'll use the time series data from Metricbeat. To ingest the data locally, download Metricbeat.
+
+Create time series visualizations
+To compare the real-time percentage of CPU time spent in user space to the results offset by one hour, create a time series visualization.
+
+Define the functions
+To start tracking the real-time percentage fo CPU, enter the following in the Timelion Expression field:
+
+.es(index=metricbeat-*,
+    timefield='@timestamp',
+    metric='avg:system.cpu.user.pct')
+
+Compare the data
+To compare the two data sets, add another series with data from the previous hour, separated by a comma:
+
+.es(index=metricbeat-*,
+    timefield='@timestamp',
+    metric='avg:system.cpu.user.pct'),
+.es(offset=-1h,
+    index=metricbeat-*,
+    timefield='@timestamp',
+    metric='avg:system.cpu.user.pct')
+
+https://www.elastic.co/kr/blog/timelion-tutorial-from-zero-to-hero
+2017년 8월 11일
+Timelion Tutorial - From Zero to Hero
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
