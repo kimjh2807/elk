@@ -45,11 +45,130 @@ https://www.elastic.co/kr/blog/timelion-tutorial-from-zero-to-hero
 2017년 8월 11일
 Timelion Tutorial - From Zero to Hero
 
+Timelion is an visualization tool for time series in Kibana. Time series visualizations are visualizations, that analyze data in time order. Timelion can be used to draw two dimensional graphs, with the time drawn on the x-axis.
 
+What's the advantage over just using plain bar or line visualizations? Timelion takes a different approach. Instead of using a visual editor to create charts, you define a graph by chaining functions together, using a  timelion specific syntax. This syntax enables some features, that classical point series charts don't offer - like drawing data from different indices or data sources into one graph.
 
+This tutorial will first give a short introduction to the timelion UI in Kibana and will afterwards explain the timelion syntax and show several use cases, that you couldn't or still cannot do with classical Kibana visualizations.
 
+Timelion expressions
+The simplest expression - that will also automatically be used for new graphs is the following:
 
+.es(*)
+.elasticsearch(*)
 
+Funtion parameters
+Functions can have multiple parameters, and so does the .es function. Each parameter has a name, that you can use inside the parentheses to set its value.
+
+.es(*)
+.es(q=*)
+
+Multiple parameters are separated by comma. The .es function has another parameter called index, that can be used to specify an index pattern for this series, so the query won't be executed again all indexes (or whatever you changed the above mentioned setting to).
+
+.es(q=*, index=logstash-*)
+
+If the value of your parameter contains spaces or commas you have to put the value in singel or double quotes. You can omit these quotes otherwise.
+
+.es(q='some query', index=logstash-*)
+
+Chaining functions
+A lot of the timelion functions are used to modify a series of data. You apply these by chaining the functions in the expression. The .label function is such a function. You can use it to change the label of a series:
+
+.es(q=country:de).label(Germany)
+
+Multiple series
+One of the advantages of using timelion is the ability to add multiple tiem series to one chart. Multiple series must simply be separated by a comma in the expression:
+
+.es(q=de), .es(q=us)
+
+You can also chain functions on each series now, e.g. for specifying labels:
+
+.es(q=de).label(Germany), .es(q=us).label('United States')
+
+Timelion functions
+To demonstrate the functions we will use some sample data, which contains access logs from a web server. The sample data was created using makelogs which you can use th create your own sample data.
+
+Data source functions
+Data source functions can be used to load data into the graph. We've already seen the .es data function, that loads data from Elasticsearch. Timelion offers some more sources to load data from, which we will explain in this section.
+
+Elasticsearch
+Before we have a look at the other data source functions, we should first look at the .es function again. It provides some more functionality, that we haven't seen yet.
+
+Since it is a common use case to split lines by the value of a specific field (what you can do with a terms aggregation in a regular visulaization), the .es function has a parameter named split for that.
+
+The value of the split parmeter must be a fieldname, followed by a colon, followed by a numeric value, on how many of the top values should get a line. The following expression, shows the traffic of the top 4 countries (the country code is stored in the geo.dest field) in our smaple data:
+
+.es(split=country:4)
+
+The metic parameter is used to control the calculation of the y-value. By default the .es function will put the count of documents on the y-axis. You can use the metric parameter to specify another metrics aggregation, that should be used to calculate the value at a specific time. The value must be the name of a single value metrics aggregation, followed by a colon, followed by the field name to calculate that aggregation on. 
+
+Valid names for the aggregation are e.g. avg to calculate the average value of a field, sum for the sum, carinality to get the amount of unique values in a field, min and max to retrieve the minumum or maximun value of a field.
+
+If we want to modify the above expression to display the top 4 countries by how many bytes has been transferes in that country (to see what countries are responsible for my bandwidth), you can use the metric parameter as follows:
+
+.es(split=country:4, metric=sum:bytes)
+
+You can also use multiple split parameters to create subbuckets (as in visualizations) and multiple metric parameters to draw multiple vlaues per time point.
+
+static/value
+.static (or the alias .value) will just draw a plain horizontal line at the given value. This can be useful to draw a visual threshold to a graph. You can also use the parameter label to directly label the series:
+
+.es(), .static(25, label='good visitor level')
+
+Offsetting data source
+Each of the data source functions accept a parameter called offset. It can be used to offset the data by a specific time range. This can be useful to compare data from different time ranges. The offset prarmeter accepts positive and negative values with a unit. Valid units are s for seconds, m for minutes, h for hours, d for days, w for weeks, M for months and y for years. It will shift the input by the specific offset before drawing it.
+
+To draw our current page visitors (from our sample data) compared to the visits a week before, you can use the following expression:
+
+.es().label(current), .es(offset=-1w).label('prev week')
+
+Docs > Kibana User Guide [5.5] >> Timelion >> Getting Started >> Creating time series visualizations
+https://www.elastic.co/guide/en/kibana/5.5/timelion-create.html
+
+Creating time series visualizations
+This tutorial will be using the time series data from Metricbeat to walk you through a number of functions that Timelion offers. To get started, download Metricbeat and follow the instructions here to start ingesting the data locally.
+
+The first visualization you'll create will compare the real time percentage of CPU time spent in user space to the results offset by one hour. In order to create this visualization, we'll need to create two Timelion expressions. One with the real-time average of system.cpu.user.pct and another with the average offset by one hour.
+
+To start, you will need to define an index, timefield and metric in the first expression. Go ahead and enter the below expression into the Timelion query bar.
+
+.es(index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct')
+
+Now you need to add another series with data from the previous hour for comparison. To do so, you'll have to add an offset argument to the .es() function. offset will offset the series retrieval by a date expression. For this example, you'll want to offset the data back one hour and will be using the date expression -1h. Using a comma to separate the two series, enter the following expression into the Timelion query bar:
+
+.es(index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct'), .es(offset=-1h, index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct')
+
+It's a bit hard to differentiate the two series. Customize the labels in order to easily distinguish them. You can always append the .label() function to any expression to add a custom label. Enter the below expression into the Timelion query bar to customize your labels:
+
+.es(offest=-1h, index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('last hour'), .es(index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('current hour')
+
+Kibana User Guide [5.5] >> Timelion >> Getting Started >> Customize and format visualizations
+https://www.elastic.co/guide/en/kibana/5.5/timelion-customize.html
+
+Customize and format visulaizations
+Timelion has plenty of options for customization. You can personalize nearly every aspect of a chart with the functions available. For this tutorial, you will perform the following modifications.
+ - Add a title
+ - Change a series type
+ - Change the color and opacity of a series
+ - Modify the legend
+
+In the previous section, you created a Timelion chart with two series. Let's continue to customize this visualization.
+
+Before making any other modifications, append the title() function to the end of an expression to add a title with a meaningful name. This will make it much easier for unfamiliar users to understand the visualiztions purpose. For this example, add title('CPU usage over time') to the original series. Use the following in your Timelion querybar:
+
+.es(offset=-1h, index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('last hour'), .es(index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('current hour').title('CPU usage over time')
+
+To differentiate the last hour series a bit more, you are going to change the chart type to an area chart. In order do so, you'll need to use the .lines() function to customize the line chart. You'll be setting the fill and width arguments to set the fill of the line chart and line width respectively. In this example, you will set the fill level to 1 and the width of the border to 0.5 by appending .lines(fill=1, width=0.5). Use the following expression in the Timelion query bar:
+
+.es(offset=-1h, index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('last hour').lines(fill=1, width=0.5), .es(index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('current hour').title('CPU usage over time')
+
+Let's color these series so that the current hour series pops a bit more than the last hour series. The color() function can be used to change the color of any series and accepts standard color names, hexadecimal values or a color schema for grouped series. For this example you will use .color(gray) for the last hour and .color(#1E90FF) for the current hour. Enter the following expression into the Timelion query bar to make the adjustments:
+
+.es(offeset=-1h, index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('last hour').lines(fill=1, width=0.5).color(gray), .es(index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('current hour').title('CPU usage over time').color(#1E90FF)
+
+Last but not least, adjust the legend so that it takes up as little space as possible. You can utilize the .legend() function to set the position and style of the legend. For this example, place the legend in the north west position of the visualization with two columns by appending .legend(columns=2, position=nw) to the original series. Use the following expression to make the adjustments:
+
+.es(offeset=-1h, index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('last hour').lines(fill=1, width=0.5).color(gray), .es(index=metricbeat-*, timefield='@timestamp', metric='avg:system.cpu.user.pct').label('current hour').title('CPU usage over time').color(#1E90FF).legend(columns=2, postion=nw)
 
 
 
